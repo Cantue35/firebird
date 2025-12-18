@@ -1,6 +1,6 @@
 import QtQuick 2.0
-import QtQuick.Controls 1.0
-import QtQuick.Dialogs 1.0
+import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts 1.0
 import Firebird.Emu 1.0
 
@@ -18,11 +18,11 @@ RowLayout {
         id: dialogLoader
         active: false
         sourceComponent: FileDialog {
-            folder: Emu.dir(filePath)
+    currentFolder: "file://" + Emu.dir(filePath)
             // If save dialogs are not supported, force an open dialog
-            selectExisting: parent.selectExisting || !Emu.saveDialogSupported()
+    fileMode: (parent.selectExisting || !Emu.saveDialogSupported()) ? FileDialog.OpenFile : FileDialog.SaveFile
             onAccepted: {
-                filePath = Emu.toLocalFile(fileUrl);
+                filePath = Emu.toLocalFile(selectedFile);
                 forceRefresh++;
             }
         }
@@ -69,10 +69,10 @@ RowLayout {
             id: createDialogLoader
             active: false
             sourceComponent: FileDialog {
-                folder: Emu.dir(filePath)
-                selectExisting: false
+    currentFolder: "file://" + Emu.dir(filePath)
+    fileMode: (false) ? FileDialog.OpenFile : FileDialog.SaveFile
                 onAccepted: {
-                    filePath = Emu.toLocalFile(fileUrl);
+                    filePath = Emu.toLocalFile(selectedFile);
                     forceRefresh++;
                 }
             }

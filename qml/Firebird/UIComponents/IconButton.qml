@@ -1,6 +1,5 @@
 import QtQuick 2.0
-import QtQuick.Controls 1.0
-
+import QtQuick.Controls
 /* A push button with a symbol instead of text.
  * ToolButton and <img/> in Label don't size correctly,
  * so do it manually.

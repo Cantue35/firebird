@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import QtQuick.Dialogs 1.1
+import QtQuick.Dialogs
 import QtQuick.Layouts 1.0
 
 import Firebird.Emu 1.0

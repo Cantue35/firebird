@@ -1,57 +1,60 @@
 import QtQuick 2.7
 import QtQuick.Layouts 1.0
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
-
+import QtQuick.Controls
 import Firebird.UIComponents 1.0
 
 Item {
     Layout.fillHeight: true
     Layout.fillWidth: true
 
-    TabView {
-        id: tabView
-        anchors {
-            left: parent.left
-            right: swipeBar.left
-            top: parent.top
-            bottom: autoSaveLabel.top
-            bottomMargin: 2
-        }
+    Item {
+    id: tabView
+    anchors.fill: parent
+    anchors.rightMargin: swipeBar.implicitWidth
+    anchors.bottomMargin: autoSaveLabel.implicitHeight
+    clip: true
 
-        property var model: ConfigPagesModel {}
+    property var model: ConfigPagesModel {}
 
-    /*    style: TabViewStyle {
-            tab: Rectangle {
-                color: styleData.selected ? "darkgrey" :"lightgrey"
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
 
-                implicitWidth: tabView.width / model.count
-                implicitHeight: title.contentHeight + 10
+        TabBar {
+            id: tabBar
+            Layout.fillWidth: true
 
-                FBLabel {
-                    id: title
-                    anchors.fill: parent
-                    text: styleData.title
-                    font.pixelSize: TextMetrics.title1Size
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
-                    color: styleData.selected ? "white" : "black"
+            Repeater {
+                id: tabButtons
+                model: tabView.model
+                delegate: TabButton {
+                    text: qsTranslate("ConfigPagesModel", tabButtons.model.get(index).title)
                 }
             }
-            frame: Rectangle { color: "#eeeeee" }
-        }*/
+        }
 
-        Repeater {
-            id: rep
-            model: tabView.model
+        StackLayout {
+            id: tabStack
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            currentIndex: tabBar.currentIndex
 
-            Tab {
-                title: qsTranslate("ConfigPagesModel", rep.model.get(index).title)
-                source: file
+            Repeater {
+                id: tabPages
+                model: tabView.model
+                delegate: Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Loader {
+                        anchors.fill: parent
+                        source: tabPages.model.get(index).file
+                    }
+                }
             }
         }
     }
+}
+
 
     FBLabel {
         id: autoSaveLabel

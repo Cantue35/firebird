@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.1
-import QtQuick.Controls 1.2
-import QtQuick.Dialogs 1.3
+import QtQuick.Controls
+import QtQuick.Dialogs
 import Firebird.Emu 1.0
 import Firebird.UIComponents 1.0
 
@@ -10,7 +10,7 @@ Dialog {
     title: qsTr("Create Flash Image")
     // Work around QTBUG-89607: Menu (used by ComboBox) doesn't work in modal windows
     modality: Qt.platform.pluginName == "cocoa" ? Qt.NonModal : Qt.WindowModal
-    standardButtons: Dialog.Save | Dialog.Cancel
+    standardButtons: DialogButtonBox.Save | DialogButtonBox.Cancel
     onVisibleChanged: {
         // For some reason the initial size on wayland is too big.
         // Setting it to -1 initially appears to work around that.
@@ -156,9 +156,9 @@ Dialog {
         id: fileDialogLoader
         active: false
         sourceComponent: FileDialog {
-            selectExisting: false
+            fileMode: FileDialog.SaveFile
             onAccepted: {
-                var filePath = Emu.toLocalFile(fileUrl);
+                var filePath = Emu.toLocalFile(selectedFile);
                 var success = false;
                 if (!modelCombo.cx2Selected)
                     success = Emu.createFlash(filePath, modelCombo.productId, subtypeCombo.featureValue, manufSelect.filePath, boot2Select.filePath, osSelect.filePath, diagsSelect.filePath);
@@ -175,16 +175,18 @@ Dialog {
         }
     }
 
-    onActionChosen: {
-        if (action.button === Dialog.Save) {
-            // Don't close the dialog now, but only
-            // after successful saving
-            action.accepted = false;
-
-            if (!layout.validationText) {
-                fileDialogLoader.active = true;
-                fileDialogLoader.item.visible = true;
-            }
+        onAccepted: {
+        // Save pressed
+        if (layout.validationText !== "") {
+            return;
         }
+        fileDialogLoader.active = true;
+        Qt.callLater(function() {
+            if (fileDialogLoader.item) {
+                fileDialogLoader.item.open();
+            }
+        });
+        flashDialog.visible = false;
     }
+
 }
