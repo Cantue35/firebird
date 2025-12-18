@@ -122,9 +122,10 @@ MainWindow::MainWindow(QWidget *parent) :
     for(auto &languageCode : translations)
     {
         languageCode.chop(3); // Chop off file extension
-        QLocale locale(languageCode);
+        const QLocale locale(languageCode);
         QAction *action = new QAction(locale.nativeLanguageName(), ui->menuLanguage);
-        connect(action, &QAction::triggered, this, [this,languageCode] { this->switchTranslator(languageCode); });
+        // QLocale's QString constructor is explicit on Qt6, so pass a QLocale here.
+        connect(action, &QAction::triggered, this, [this, locale] { this->switchTranslator(locale); });
         ui->menuLanguage->addAction(action);
     }
 

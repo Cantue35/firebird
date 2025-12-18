@@ -1,5 +1,9 @@
 #ifdef MOBILE_UI
 #include <QGuiApplication>
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#  include <QMetaType>
+#endif
 #else
 #include <QApplication>
 #include "mainwindow.h"
@@ -104,7 +108,10 @@ int main(int argc, char **argv)
     QCoreApplication::setApplicationName(QStringLiteral("firebird-emu"));
 
     // Needed for settings migration
+    // Qt6 removed qRegisterMetaTypeStreamOperators(); QVariant/QMetaType streaming works differently.
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<KitModel>();
+#endif
     qRegisterMetaType<KitModel>();
 
     migrateSettings();
