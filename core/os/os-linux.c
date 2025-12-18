@@ -6,9 +6,20 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 #ifdef __APPLE__
     #include <mach/clock.h>
     #include <mach/mach.h>
+    #include <pthread.h>
+
+#if defined(__APPLE__) && defined(__aarch64__)
+/*
+ * pthread_jit_write_protect_np can be hidden by SDK availability guards when
+ * building with an older -mmacosx-version-min. Declare it explicitly so arm64
+ * builds still compile; Apple Silicon requires macOS 11+ at runtime.
+ */
+extern void pthread_jit_write_protect_np(int enabled);
+#endif
 #endif
 
 #ifndef MAP_32BIT
@@ -73,6 +84,17 @@ void os_free(void *ptr, size_t size)
         munmap(ptr, size);
 }
 
+void os_jit_write_protect(int enabled)
+{
+#if defined(__APPLE__) && defined(__aarch64__) && !defined(IS_IOS_BUILD)
+    /* 0 = writable, 1 = executable (write-protected) */
+    pthread_jit_write_protect_np(enabled);
+#else
+    (void)enabled;
+#endif
+}
+
+
 void *os_alloc_executable(size_t size)
 {
 #if defined(IS_IOS_BUILD)
@@ -92,16 +114,6 @@ void *os_alloc_executable(size_t size)
 
     msync(ptr, size, MS_SYNC|MS_INVALIDATE);
     return ptr;
-}
-
-void os_jit_write_protect(int enabled)
-{
-#if defined(__APPLE__) && defined(__aarch64__) && !defined(IS_IOS_BUILD)
-    /* 0 = writable, 1 = executable (write-protected) */
-    pthread_jit_write_protect_np(enabled);
-#else
-    (void)enabled;
-#endif
 }
 
 void *os_map_cow(const char *filename, size_t size)

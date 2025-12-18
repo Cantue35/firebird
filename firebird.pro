@@ -94,6 +94,14 @@ ios {
 # QMAKE_HOST can be e.g. armv7hl, but QT_ARCH would be arm in such cases
 FB_ARCH = $$QT_ARCH
 
+
+# On macOS, QT_ARCH reflects the Qt build (often x86_64 even when targeting arm64 with a universal Qt).
+# Prefer the actual target architecture passed via QMAKE_APPLE_DEVICE_ARCHS.
+macx:!isEmpty(QMAKE_APPLE_DEVICE_ARCHS) {
+    contains(QMAKE_APPLE_DEVICE_ARCHS, arm64)  : FB_ARCH = aarch64
+    contains(QMAKE_APPLE_DEVICE_ARCHS, x86_64) : FB_ARCH = x86_64
+}
+
 # arm64, arm64-v8a
 contains(FB_ARCH, "arm64.*") {
     FB_ARCH = aarch64
