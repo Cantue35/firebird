@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick
 import QtQuick.Controls
 /* A push button with a symbol instead of text.
  * ToolButton and <img/> in Label don't size correctly,
@@ -7,16 +7,22 @@ import QtQuick.Controls
  * and it can also be specified explicitly. */
 
 Button {
-    property alias icon: image.source
+    id: control
+    // Qt 6: Button already has an `icon` property-group and it is FINAL.
+    // Do not redeclare/alias it (that breaks component instantiation).
+    // Callers should set: `icon.source: "..."`.
 
     implicitHeight: TextMetrics.normalSize * 2.5
     implicitWidth: implicitHeight
 
-    Image {
+    contentItem: Image {
         id: image
+        source: control.icon.source
         height: Math.round(parent.height * 0.6)
+        width: height
         anchors.centerIn: parent
 
         fillMode: Image.PreserveAspectFit
+        mipmap: true
     }
 }

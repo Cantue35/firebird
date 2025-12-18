@@ -88,14 +88,14 @@ Rectangle {
                      id: saveFailedDialog
                      title: qsTr("Error")
                      text: qsTr("Failed to save changes!")
-                     icon: StandardIcon.Warning
+                    icon: MessageDialog.Warning
                  }
 
                  MessageDialog {
                      id: snapWarnDialog
                      title: qsTr("Warning")
                      text: qsTr("Flash saved, but no snapshot location configured.\nYou won't be able to resume.")
-                     icon: StandardIcon.Warning
+                    icon: MessageDialog.Warning
                  }
 
                  onClicked: {

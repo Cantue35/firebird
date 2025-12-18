@@ -60,12 +60,15 @@ ApplicationWindow {
 
     MessageDialog {
         id: suspendFailedDialog
-        standardButtons: StandardButton.Yes | StandardButton.No
-        icon: StandardIcon.Warning
+        // Qt 6 (QtQuick.Dialogs): `buttons` replaces `standardButtons`, and
+        // the `StandardButton/StandardIcon` enums moved under MessageDialog.
+        buttons: MessageDialog.Yes | MessageDialog.No
+        icon: MessageDialog.Warning
         title: qsTr("Suspend failed")
         text: qsTr("Suspending the emulation failed. Do you still want to quit Firebird?")
 
-        onYes: {
+        // Qt 6: there is no `onYes`; Yes maps to the dialog being accepted.
+        onAccepted: {
             ignoreSuspendOnClose = true;
             app.close();
         }
@@ -84,7 +87,7 @@ ApplicationWindow {
                     app.close();
                 }
                 else
-                    suspendFailedDialog.visible = true;
+                    suspendFailedDialog.open();
             }
         }
         onToastMessage: {
