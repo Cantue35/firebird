@@ -959,7 +959,15 @@ bool QQuickWidgetLessBroken::event(QEvent *event)
 {
     if(event->type() == QEvent::Leave)
     {
-        QMouseEvent ev(QMouseEvent::MouseMove, QPointF(0, 0), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt 6 constructor requires explicit local/scene/global positions.
+    QMouseEvent ev(QEvent::MouseMove,
+                   QPointF(0, 0), QPointF(0, 0), QPointF(0, 0),
+                   Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+#else
+    QMouseEvent ev(QEvent::MouseMove, QPointF(0, 0), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+#endif
+
         QQuickWidget::event(&ev);
     }
 

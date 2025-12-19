@@ -3,7 +3,6 @@ import Firebird.UIComponents 1.0
 
 import QtQuick 2.0
 import QtQuick.Controls
-import QtQuick.Dialogs
 import QtQuick.Layouts 1.0
 
 ApplicationWindow {
@@ -58,19 +57,22 @@ ApplicationWindow {
         close.accepted = false;
     }
 
-    MessageDialog {
+    Dialog {
         id: suspendFailedDialog
-        // Qt 6 (QtQuick.Dialogs): `buttons` replaces `standardButtons`, and
-        // the `StandardButton/StandardIcon` enums moved under MessageDialog.
-        buttons: MessageDialog.Yes | MessageDialog.No
-        icon: MessageDialog.Warning
+        modal: true
         title: qsTr("Suspend failed")
-        text: qsTr("Suspending the emulation failed. Do you still want to quit Firebird?")
-
-        // Qt 6: there is no `onYes`; Yes maps to the dialog being accepted.
+        standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+    
+        // In Qt 6, use QtQuick.Controls.Dialog instead of MessageDialog to avoid API differences.
+        contentItem: Label {
+            text: qsTr("The calculator could not be suspended. Exiting anyway may lose changes. Exit now?")
+            wrapMode: Text.WordWrap
+            width: parent ? parent.width : implicitWidth
+        }
+    
         onAccepted: {
-            ignoreSuspendOnClose = true;
-            app.close();
+            ignoreSuspendOnClose = true
+            app.close()
         }
     }
 
@@ -87,7 +89,7 @@ ApplicationWindow {
                     app.close();
                 }
                 else
-                    suspendFailedDialog.open();
+                    suspendFailedDialog.visible = true;
             }
         }
         onToastMessage: {

@@ -221,7 +221,7 @@
          <widget class="QPlainTextEdit" name="debugConsole">
           <property name="font">
            <font>
-            <family>Droid Sans Mono</family>
+            <family>Monospace</family>
            </font>
           </property>
           <property name="undoRedoEnabled">
@@ -245,7 +245,7 @@
           </property>
           <property name="font">
            <font>
-            <family>Droid Sans Mono</family>
+            <family>Monospace</family>
            </font>
           </property>
          </widget>

@@ -603,7 +603,8 @@ static void preload(uint8_t *nand_data, struct nand_metrics nand_metrics, Partit
     }
 
     uint8_t *pagep = &nand_data[page * nand_metrics.page_size];
-    sprintf((char *)&pagep[0], "***PRELOAD_%s***", name);
+    // Avoid deprecated sprintf; the pre-load marker is stored in the first 20 bytes of the page.
+    snprintf((char *)&pagep[0], 20, "***PRELOAD_%s***", name);
     *(uint32_t *)&pagep[20] = BSWAP32(0x55F00155);
     *(uint32_t *)&pagep[24] = BSWAP32(manifest_size);
     *(uint32_t *)&pagep[28] = BSWAP32(image_size);

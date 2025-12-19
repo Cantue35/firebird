@@ -1,17 +1,22 @@
-#ifdef MOBILE_UI
-#include <QGuiApplication>
 #include <QtGlobal>
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#  include <QMetaType>
-#endif
-#else
-#include <QApplication>
-#include "mainwindow.h"
-#endif
-#include <QTranslator>
 
-#include <QWindow>
+#ifdef MOBILE_UI
+  #include <QGuiApplication>
+#else
+  #include <QApplication>
+  #include "mainwindow.h"
+#endif
+
+#include <QCoreApplication>
+#include <QDebug>
+#include <QLocale>
+#include <QSettings>
+#include <QTranslator>
+#include <QVariantHash>
+
 #include <QQmlApplicationEngine>
+#include <QQmlEngine>
+#include <QtQml/qqml.h>
 
 #include "emuthread.h"
 #include "qtframebuffer.h"
@@ -19,96 +24,79 @@
 #include "kitmodel.h"
 
 #if !defined(NO_TRANSLATION) && defined(IS_IOS_BUILD)
-#include <unistd.h>
-#include <sys/syscall.h>
+  #include <unistd.h>
+  #include <sys/syscall.h>
 #endif
 
-/* This function reads all keys of all sections available in a QSettings
- * instance created with org and app as parameters. */
 static QVariantHash readOldSettings(const QString &org, const QString &app)
 {
     QSettings settings(org, app);
-
     const auto keys = settings.allKeys();
-
-    if(keys.isEmpty())
+    if (keys.isEmpty())
         return {};
 
     QVariantHash ret;
-
-    for(auto & key : keys)
+    for (const auto &key : keys)
         ret[key] = settings.value(key);
-
     return ret;
 }
 
-/* If a default-constructed QSettings does not have version != 1,
- * this function tries to load settings from the old locations and
- * imports them. */
 static void migrateSettings()
 {
     QSettings current;
-    if(current.value(QStringLiteral("version"), 0).toInt() == 0)
-    {
-        qDebug("Trying to import old settings");
+    if (current.value(QStringLiteral("version"), 0).toInt() != 0)
+        return;
 
-        QVariantHash old = readOldSettings(QStringLiteral("org.firebird"), QStringLiteral("firebird-emu"));
-        if(!old.count())
-            old = readOldSettings(QStringLiteral("ndless"), QStringLiteral("firebird"));
+    qDebug("Trying to import old settings");
 
-        if(!old.count())
-            old = readOldSettings(QStringLiteral("ndless"), QStringLiteral("nspire_emu"));
+    QVariantHash old = readOldSettings(QStringLiteral("org.firebird"), QStringLiteral("firebird-emu"));
+    if (old.isEmpty())
+        old = readOldSettings(QStringLiteral("ndless"), QStringLiteral("firebird"));
+    if (old.isEmpty())
+        old = readOldSettings(QStringLiteral("ndless"), QStringLiteral("nspire_emu"));
 
-        if(old.count())
-        {
-            // Copy over values
-            for (auto it = old.begin(); it != old.end(); ++it)
-                current.setValue(it.key(), it.value());
-
-            qDebug("Settings imported");
-        }
-        else
-            qDebug("No previous settings found");
-
-        current.setValue(QStringLiteral("version"), 1);
-        current.sync();
+    if (!old.isEmpty()) {
+        for (auto it = old.begin(); it != old.end(); ++it)
+            current.setValue(it.key(), it.value());
+        qDebug("Settings imported");
+    } else {
+        qDebug("No previous settings found");
     }
+
+    current.setValue(QStringLiteral("version"), 1);
+    current.sync();
 }
 
 int main(int argc, char **argv)
 {
-    #ifdef Q_OS_ANDROID
-        QGuiApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
-    #else
-        QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    #endif
-    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+  #ifdef Q_OS_ANDROID
+    QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+  #else
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  #endif
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
 
-    #ifdef MOBILE_UI
-        QGuiApplication app(argc, argv);
+#ifdef MOBILE_UI
+    QGuiApplication app(argc, argv);
 
-        QTranslator appTranslator;
-        appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
-        app.installTranslator(&appTranslator);
-    #else
-        QApplication app(argc, argv);
+    QTranslator appTranslator;
+    appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
+    app.installTranslator(&appTranslator);
+#else
+    QApplication app(argc, argv);
+    // Translator installed in MainWindow constructor (desktop)
+#endif
 
-        // Translator installed in MainWindow constructor
-    #endif
-
-    /* On iOS, sometimes garbage text gets rendered:
-     * https://bugreports.qt.io/browse/QTBUG-47399
-     * https://bugreports.qt.io/browse/QTBUG-56765 */
-    #ifdef IS_IOS_BUILD
-        app.setFont(QFont(QStringLiteral("Helvetica Neue")));
-    #endif
+#ifdef IS_IOS_BUILD
+    app.setFont(QFont(QStringLiteral("Helvetica Neue")));
+#endif
 
     QCoreApplication::setOrganizationDomain(QStringLiteral("firebird-emus.org"));
     QCoreApplication::setOrganizationName(QStringLiteral("Firebird Emus"));
     QCoreApplication::setApplicationName(QStringLiteral("firebird-emu"));
 
-    // Needed for settings migration
-    // Qt6 removed qRegisterMetaTypeStreamOperators(); QVariant/QMetaType streaming works differently.
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<KitModel>();
 #endif
@@ -116,47 +104,44 @@ int main(int argc, char **argv)
 
     migrateSettings();
 
+    // Bridge lifetime stack-owned for entire app lifetime
     QMLBridge qmlBridge;
-    QQmlEngine::setObjectOwnership(&qmlBridge, QQmlEngine::CppOwnership);
+    the_qml_bridge = &qmlBridge;
 
-    // Register QMLBridge for Keypad<->Emu communication
-    qmlRegisterSingletonType<QMLBridge>("Firebird.Emu", 1, 0, "Emu", [](QQmlEngine *, QJSEngine *) -> QObject* {
-        return the_qml_bridge;
-    });
-    // Register QtFramebuffer for QML display
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Preferred in Qt 6 register an existing instance as a singleton
+    qmlRegisterSingletonInstance("Firebird.Emu", 1, 0, "Emu", &qmlBridge);
+#else
+    // Qt 5 fallback
+    QQmlEngine::setObjectOwnership(&qmlBridge, QQmlEngine::CppOwnership);
+    qmlRegisterSingletonType<QMLBridge>("Firebird.Emu", 1, 0, "Emu",
+        [](QQmlEngine *, QJSEngine *) -> QObject * { return the_qml_bridge; });
+#endif
+
     qmlRegisterType<QMLFramebuffer>("Firebird.Emu", 1, 0, "EmuScreen");
-    // Register KitModel
     qmlRegisterType<KitModel>("Firebird.Emu", 1, 0, "KitModel");
 
-    #ifndef MOBILE_UI
-        MainWindow mw;
-        main_window = &mw;
-    #else
-        QQmlApplicationEngine engine;
-        engine.addImportPath(QStringLiteral("qrc:/qml/qml/"));
-        engine.load(QUrl(QStringLiteral("qrc:/qml/qml/MobileUI.qml")));
-        /*mobile_ui.setResizeMode(QQuickView::SizeRootObjectToView);
-        mobile_ui.show();*/
-    #endif
+#ifndef MOBILE_UI
+    MainWindow mw;
+    main_window = &mw;
+#else
+    QQmlApplicationEngine engine;
+    engine.addImportPath(QStringLiteral("qrc:/qml/qml/"));
+    engine.load(QUrl(QStringLiteral("qrc:/qml/qml/MobileUI.qml")));
+#endif
 
-    app.connect(&app, &QGuiApplication::lastWindowClosed, [&] {
-        // Apparently QML ApplicationWindow does not count - although
-        // it's visible this signal gets emitted. So recheck ourselves...
-        for(auto win : app.topLevelWindows())
-            if(win->isVisible()) return;
-
+    QObject::connect(&app, &QGuiApplication::lastWindowClosed, [&] {
+        // QML ApplicationWindow may not count, so re-check visibility.
+        for (auto *win : app.topLevelWindows())
+            if (win && win->isVisible())
+                return;
         emu_thread.stop();
     });
 
-    int execRet = app.exec();
+    const int execRet = app.exec();
 
 #if !defined(NO_TRANSLATION) && defined(IS_IOS_BUILD)
-    // New in recent iOS versions: due to some kernel/system bug, if we leave a process
-    // with PT_TRACE_ME, it will not get terminated properly and will refuse
-    // to launch again.
     syscall(SYS_ptrace, 31 /* PT_DENY_ATTACH */, 0, NULL, 0);
-    // for debugging uncaught exception crashes, set a breakpoint on exceptions
-    // and then use `po $arg1` to dump the exception string.
 #endif
 
     return execRet;

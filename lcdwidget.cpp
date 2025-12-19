@@ -16,7 +16,12 @@ LCDWidget::LCDWidget(QWidget *parent, Qt::WindowFlags f)
 
 void LCDWidget::mousePressEvent(QMouseEvent *event)
 {
-    the_qml_bridge->setTouchpadState((qreal)event->x() / width(), (qreal)event->y() / height(), true, event->button() == Qt::RightButton);
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        const QPointF pos = event->position();
+    #else
+        const QPointF pos = event->localPos();
+    #endif
+        the_qml_bridge->setTouchpadState(pos.x() / width(), pos.y() / height(), true, event->button() == Qt::RightButton);
 }
 
 void LCDWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -33,7 +38,12 @@ void LCDWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void LCDWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    the_qml_bridge->setTouchpadState((qreal)event->x() / width(), (qreal)event->y() / height(), keypad.touchpad_contact, keypad.touchpad_down);
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        const QPointF pos = event->position();
+    #else
+        const QPointF pos = event->localPos();
+    #endif
+        the_qml_bridge->setTouchpadState(pos.x() / width(), pos.y() / height(), keypad.touchpad_contact, keypad.touchpad_down);
 }
 
 void LCDWidget::showEvent(QShowEvent *e)
