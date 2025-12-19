@@ -1,6 +1,10 @@
-import QtQuick 2.7
-import QtQuick.Layouts 1.0
+
+import QtQuick
+
+import QtQuick.Layouts
+
 import QtQuick.Controls
+
 import Firebird.UIComponents 1.0
 
 Item {

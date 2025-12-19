@@ -1,4 +1,5 @@
-import QtQuick 2.0
+
+import QtQuick
 import Firebird.Emu 1.0
 
 Rectangle {
@@ -103,7 +104,7 @@ Rectangle {
             submitState();
         }
 
-        onReleased: {
+        onReleased: function(mouse) {
             if(clickOnHoldTimer.running)
             {
                 clickOnHoldTimer.stop();
@@ -116,7 +117,7 @@ Rectangle {
             submitState();
         }
 
-        onPressed: {
+        onPressed: function(mouse) {
             origX = mouse.x;
             origY = mouse.y;
             isDown = false;

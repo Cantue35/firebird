@@ -1,28 +1,22 @@
 import QtQuick
 import QtQuick.Controls
-/* A push button with a symbol instead of text.
- * ToolButton and <img/> in Label don't size correctly,
- * so do it manually.
- * With QQC2, button icons have a better default size
- * and it can also be specified explicitly. */
 
+// Small helper button that shows only an icon.
+// Important on macOS: native QuickControls style does not support overriding
+// contentItem/background. So we use the built-in icon API instead of inserting
+// custom children.
 Button {
-    id: control
-    // Qt 6: Button already has an `icon` property-group and it is FINAL.
-    // Do not redeclare/alias it (that breaks component instantiation).
-    // Callers should set: `icon.source: "..."`.
+    id: root
 
-    implicitHeight: TextMetrics.normalSize * 2.5
-    implicitWidth: implicitHeight
+    // Backwards-compatible external API for our project.
+    // ("source" is used instead of "icon" to avoid colliding with Button.icon.)
+    property url source: ""
 
-    contentItem: Image {
-        id: image
-        source: control.icon.source
-        height: Math.round(parent.height * 0.6)
-        width: height
-        anchors.centerIn: parent
+    display: AbstractButton.IconOnly
+    icon.source: source
+    icon.width: 24
+    icon.height: 24
 
-        fillMode: Image.PreserveAspectFit
-        mipmap: true
-    }
+    padding: 4
+    flat: true
 }

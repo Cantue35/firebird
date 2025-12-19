@@ -144,9 +144,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(kitDataChanged(QModelIndex,QModelIndex,QVector<int>)));
     connect(the_qml_bridge, SIGNAL(currentKitChanged(const Kit&)), this, SLOT(currentKitChanged(const Kit &)));
 
-    //Set up monospace fonts
+    // Set up fixed-width fonts.
+    // Using the platform's fixed font directly avoids "missing font family
+    // 'Monospace'" warnings on some systems.
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    monospace.setStyleHint(QFont::Monospace);
     ui->debugConsole->setFont(monospace);
     ui->serialConsole->setFont(monospace);
 
@@ -959,15 +960,15 @@ bool QQuickWidgetLessBroken::event(QEvent *event)
 {
     if(event->type() == QEvent::Leave)
     {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    // Qt 6 constructor requires explicit local/scene/global positions.
-    QMouseEvent ev(QEvent::MouseMove,
-                   QPointF(0, 0), QPointF(0, 0), QPointF(0, 0),
-                   Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-#else
-    QMouseEvent ev(QEvent::MouseMove, QPointF(0, 0), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-#endif
-
+        // Qt 6.4+: this QMouseEvent constructor is deprecated.
+        // Use the constructor that specifies local/scene/global positions.
+        QMouseEvent ev(QEvent::MouseMove,
+                       QPointF(0, 0),  // local
+                       QPointF(0, 0),  // scene
+                       QPointF(0, 0),  // global
+                       Qt::NoButton,
+                       Qt::NoButton,
+                       Qt::NoModifier);
         QQuickWidget::event(&ev);
     }
 

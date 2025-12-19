@@ -6,7 +6,7 @@ on:
   #pull_request:
   #  branches: [ master, arm-macOS ]
   release:
-    types: [ published ]
+    types: [published]
   workflow_dispatch:
     inputs:
       arch:
@@ -14,7 +14,7 @@ on:
         required: true
         default: both
         type: choice
-        options: [ arm64, intel, both ]
+        options: [arm64, intel, both]
 
 jobs:
   build_arm64:

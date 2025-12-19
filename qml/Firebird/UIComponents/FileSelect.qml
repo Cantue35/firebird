@@ -1,7 +1,10 @@
-import QtQuick 2.0
+
+import QtQuick
 import QtQuick.Controls
+
 import QtQuick.Dialogs
-import QtQuick.Layouts 1.0
+
+import QtQuick.Layouts
 import Firebird.Emu 1.0
 
 RowLayout {
@@ -63,7 +66,7 @@ RowLayout {
     // if the open file dialog doesn't allow creation, to open a file creation dialog.
     IconButton {
         visible: showCreateButton || (!selectExisting && !Emu.saveDialogSupported())
-        icon.source: "qrc:/icons/resources/icons/document-new.png"
+        source: "qrc:/icons/resources/icons/document-new.png"
 
         Loader {
             id: createDialogLoader
@@ -89,7 +92,7 @@ RowLayout {
     }
 
     IconButton {
-        icon.source: "qrc:/icons/resources/icons/document-edit.png"
+        source: "qrc:/icons/resources/icons/document-edit.png"
         onClicked: {
             dialogLoader.active = true;
             dialogLoader.item.visible = true;

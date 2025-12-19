@@ -1,14 +1,22 @@
-import QtQuick 2.0
-import QtQuick.Layouts 1.1
+
+import QtQuick
+
+import QtQuick.Layouts
+
 import QtQuick.Controls
+
 import QtQuick.Dialogs
+
 import Firebird.Emu 1.0
+
 import Firebird.UIComponents 1.0
 
 Dialog {
     id: flashDialog
     title: qsTr("Create Flash Image")
     // Work around QTBUG-89607: Menu (used by ComboBox) doesn't work in modal windows
+    // Qt Quick Controls 2 Dialog is a Popup; it uses the boolean 'modal' property.
+    // Keep the same workaround semantics: non-modal on macOS, modal elsewhere.
     modal: Qt.platform.pluginName == "cocoa" ? false : true
     standardButtons: DialogButtonBox.Save | DialogButtonBox.Cancel
     onVisibleChanged: {

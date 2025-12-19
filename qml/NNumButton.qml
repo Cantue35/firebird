@@ -1,5 +1,5 @@
-import QtQuick 2.0
 
+import QtQuick
 NBigButton {
     width: 33
     back_color: "#555"

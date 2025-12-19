@@ -1,6 +1,8 @@
-import QtQuick 2.0
+
+import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts 1.0
+
+import QtQuick.Layouts
 import Firebird.UIComponents 1.0
 
 Rectangle {

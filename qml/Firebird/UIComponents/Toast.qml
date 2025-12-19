@@ -1,9 +1,12 @@
-import QtQuick 2.0
+
+import QtQuick
 
 import Firebird.UIComponents 1.0
 
 Rectangle {
-    property int maxWidth: parent.width * 0.9
+    // "parent" can be null while the component is being constructed.
+    // Guard to avoid "Unable to assign [undefined] to int" on Qt 6.
+    property int maxWidth: parent ? Math.round(parent.width * 0.9) : 0
     height: message.contentHeight + 8
     width: message.contentWidth + 10
 

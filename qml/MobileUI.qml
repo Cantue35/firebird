@@ -1,9 +1,16 @@
+
 import Firebird.Emu 1.0
+
 import Firebird.UIComponents 1.0
 
-import QtQuick 2.0
+
+import QtQuick
+
 import QtQuick.Controls
-import QtQuick.Layouts 1.0
+
+import QtQuick.Dialogs
+
+import QtQuick.Layouts
 
 ApplicationWindow {
     id: app
@@ -61,15 +68,22 @@ ApplicationWindow {
         id: suspendFailedDialog
         modal: true
         title: qsTr("Suspend failed")
-        standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
-    
-        // In Qt 6, use QtQuick.Controls.Dialog instead of MessageDialog to avoid API differences.
-        contentItem: Label {
-            text: qsTr("The calculator could not be suspended. Exiting anyway may lose changes. Exit now?")
-            wrapMode: Text.WordWrap
-            width: parent ? parent.width : implicitWidth
+        width: Math.min(app.width * 0.9, 420)
+
+        footer: DialogButtonBox {
+            // Qt 6 / Qt Quick Controls 2: use DialogButtonBox enums.
+            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+            onAccepted: suspendFailedDialog.accept()
+            onRejected: suspendFailedDialog.reject()
         }
-    
+
+        contentItem: Label {
+            text: qsTr("Suspending the emulation failed. Do you still want to quit Firebird?")
+            wrapMode: Text.WordWrap
+            padding: 12
+        }
+
+        // For Dialog/standardButtons, "Yes" is treated as an accepted button.
         onAccepted: {
             ignoreSuspendOnClose = true
             app.close()
@@ -78,7 +92,7 @@ ApplicationWindow {
 
     Connections {
         target: Emu
-        onEmuSuspended: {
+        function onEmuSuspended(success) {
             if(closeAfterSuspend)
             {
                 closeAfterSuspend = false;
@@ -92,14 +106,14 @@ ApplicationWindow {
                     suspendFailedDialog.visible = true;
             }
         }
-        onToastMessage: {
+        function onToastMessage(msg) {
             toast.showMessage(msg);
         }
     }
 
     Connections {
         target: Qt.application
-        onStateChanged: {
+        function onStateChanged() {
             switch (Qt.application.state)
             {
                 case Qt.ApplicationSuspended: // Might be reaped on mobile
@@ -140,7 +154,10 @@ ApplicationWindow {
         pixelAligned: true
 
         // Keep the pages alive
-        cacheBuffer: width * count
+        // Keep pages alive without creating binding loops (Qt 6.8 can warn
+        // when cacheBuffer is derived from properties that change during
+        // view initialization).
+        cacheBuffer: 100000
 
         model: [ "MobileUIConfig.qml", "MobileUIDrawer.qml", "MobileUIFront.qml" ]
 
@@ -197,7 +214,7 @@ ApplicationWindow {
                 listView.pageX[index] = x;
             }
 
-            width: modelData === "MobileUIDrawer.qml" ? loader.item.implicitWidth : app.width
+            width: modelData === "MobileUIDrawer.qml" && loader.item ? loader.item.implicitWidth : app.width
             height: app.height
 
             Rectangle {

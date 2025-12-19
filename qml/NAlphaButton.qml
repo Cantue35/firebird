@@ -1,5 +1,5 @@
-import QtQuick 2.0
 
+import QtQuick
 NButton {
     width: 18
     height: 18

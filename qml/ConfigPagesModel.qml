@@ -1,5 +1,5 @@
-import QtQuick 2.0
 
+import QtQuick
 ListModel {
     ListElement {
         title: QT_TR_NOOP("Flash & Boot1")

@@ -1,8 +1,12 @@
-import QtQuick 2.0
+
+import QtQuick
 import QtQuick.Controls
+
 import QtQuick.Dialogs
-import QtQuick.Layouts 1.0
+
+import QtQuick.Layouts
 import Firebird.Emu 1.0
+
 import Firebird.UIComponents 1.0
 
 ColumnLayout {
