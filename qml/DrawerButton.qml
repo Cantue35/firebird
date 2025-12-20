@@ -90,7 +90,7 @@ Rectangle {
             bottom: parent.bottom
         }
 
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         verticalAlignment: Text.AlignVCenter
     }
 }

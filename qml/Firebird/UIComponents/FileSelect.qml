@@ -56,7 +56,7 @@ RowLayout {
             id: subtextLabel
             elide: "ElideRight"
 
-            font.pixelSize: TextMetrics.normalSize * 0.8
+            font.pixelSize: UiMetrics.normalSize * 0.8
             Layout.fillWidth: true
             visible: text !== ""
         }

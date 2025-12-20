@@ -45,7 +45,7 @@ Item {
             text: "Text"
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            font.pixelSize: TextMetrics.normalSize
+            font.pixelSize: UiMetrics.normalSize
         }
     }
 }

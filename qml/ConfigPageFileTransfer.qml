@@ -14,7 +14,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("File Transfer")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 5
         Layout.bottomMargin: 5
     }
@@ -23,7 +23,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("If you are unable to use the main window's file transfer using either drag'n'drop or the file explorer, you can send files here.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
         visible: !Emu.isMobile()
     }
 
@@ -31,7 +31,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("Here you can send files into the target folder specified below.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     Loader {
@@ -114,7 +114,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("Target Directory")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 5
         Layout.bottomMargin: 5
     }
@@ -123,7 +123,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("When dragging files onto Firebird, it will try to send them to the emulated system.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     RowLayout {

@@ -4,9 +4,7 @@ import QtQuick
 import Firebird.UIComponents 1.0
 
 Rectangle {
-    // "parent" can be null while the component is being constructed.
-    // Guard to avoid "Unable to assign [undefined] to int" on Qt 6.
-    property int maxWidth: parent ? Math.round(parent.width * 0.9) : 0
+    property int maxWidth: parent.width * 0.9
     height: message.contentHeight + 8
     width: message.contentWidth + 10
 
@@ -34,7 +32,7 @@ Rectangle {
         anchors.centerIn: parent
 
         horizontalAlignment: Text.Center
-        font.pixelSize: TextMetrics.title1Size
+        font.pixelSize: UiMetrics.title1Size
         wrapMode: Text.WordWrap
 
         Timer {

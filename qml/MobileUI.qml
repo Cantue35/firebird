@@ -68,14 +68,10 @@ ApplicationWindow {
         id: suspendFailedDialog
         modal: true
         title: qsTr("Suspend failed")
+        // In Qt 6, DialogButtonBox::StandardButton is not injected as a global
+        // "StandardButton" object in QML. Use Dialog's StandardButtons flags.
+        standardButtons: Dialog.Yes | Dialog.No
         width: Math.min(app.width * 0.9, 420)
-
-        footer: DialogButtonBox {
-            // Qt 6 / Qt Quick Controls 2: use DialogButtonBox enums.
-            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
-            onAccepted: suspendFailedDialog.accept()
-            onRejected: suspendFailedDialog.reject()
-        }
 
         contentItem: Label {
             text: qsTr("Suspending the emulation failed. Do you still want to quit Firebird?")
@@ -153,11 +149,9 @@ ApplicationWindow {
         boundsBehavior: ListView.StopAtBounds
         pixelAligned: true
 
-        // Keep the pages alive
-        // Keep pages alive without creating binding loops (Qt 6.8 can warn
-        // when cacheBuffer is derived from properties that change during
-        // view initialization).
-        cacheBuffer: 100000
+        // Keep the pages alive and prevent re-creation when swiping.
+        // Use a fixed cacheBuffer to avoid binding loops on some platforms.
+        cacheBuffer: 10000
 
         model: [ "MobileUIConfig.qml", "MobileUIDrawer.qml", "MobileUIFront.qml" ]
 

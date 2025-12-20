@@ -12,7 +12,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("Startup")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 5
         Layout.bottomMargin: 5
     }
@@ -28,7 +28,7 @@ ColumnLayout {
                 return qsTr("Choose the Kit selected on startup and after restarting. If the checkbox is active, it will be launched when Firebird starts.")
         }
 
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     RowLayout {
@@ -60,7 +60,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("Shutdown")
-        font.pixelSize: TextMetrics.title1Size
+        font.pixelSize: UiMetrics.title1Size
         Layout.topMargin: 10
         Layout.bottomMargin: 5
         visible: Qt.platform.os !== "ios"
@@ -75,7 +75,7 @@ ColumnLayout {
             else
                 return qsTr("On Application end, save the current state to the current snapshot.");
         }
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
         visible: Qt.platform.os !== "ios"
     }
 
@@ -92,7 +92,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("UI Preferences")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 10
         Layout.bottomMargin: 5
         visible: Emu.isMobile()
@@ -102,7 +102,7 @@ ColumnLayout {
         Layout.maximumWidth: parent.width
         wrapMode: Text.WordWrap
         text: qsTr("Change the side of the keypad in landscape orientation.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
         visible: Emu.isMobile()
     }
 

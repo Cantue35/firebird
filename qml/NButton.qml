@@ -112,6 +112,7 @@ Rectangle {
         }
 
         onReleased: function(mouse) {
+                
             mouse.accepted = true;
 
             if(mouse.button == Qt.LeftButton

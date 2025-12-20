@@ -144,10 +144,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(kitDataChanged(QModelIndex,QModelIndex,QVector<int>)));
     connect(the_qml_bridge, SIGNAL(currentKitChanged(const Kit&)), this, SLOT(currentKitChanged(const Kit &)));
 
-    // Set up fixed-width fonts.
-    // Using the platform's fixed font directly avoids "missing font family
-    // 'Monospace'" warnings on some systems.
+    //Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setStyleHint(QFont::Monospace);
     ui->debugConsole->setFont(monospace);
     ui->serialConsole->setFont(monospace);
 

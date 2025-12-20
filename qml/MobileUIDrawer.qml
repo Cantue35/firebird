@@ -157,7 +157,7 @@ Rectangle {
                 toggleState: Emu.turboMode
 
                 title: qsTr("Speed: %1 %").arg(Math.round(100*Emu.speed))
-                font.pixelSize: TextMetrics.normalSize
+                font.pixelSize: UiMetrics.normalSize
                 onToggleStateChanged: {
                     Emu.turboMode = toggleState
                     toggleState = Qt.binding(function() { return Emu.turboMode })
@@ -171,7 +171,7 @@ Rectangle {
 
                 title: qsTr("Firebird Emu v" + Emu.version)
 
-                font.pixelSize: TextMetrics.normalSize
+                font.pixelSize: UiMetrics.normalSize
 
                 MessageDialog {
                     id: aboutDialog

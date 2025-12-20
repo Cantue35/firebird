@@ -12,7 +12,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("Remote GDB debugging")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 5
         Layout.bottomMargin: 5
     }
@@ -21,7 +21,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("If enabled, a remote GDB debugger can be connected to the port and be used for debugging.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     RowLayout {
@@ -44,7 +44,7 @@ ColumnLayout {
 
         SpinBox {
             id: gdbPort
-            Layout.maximumWidth: TextMetrics.normalSize * 8
+            Layout.maximumWidth: UiMetrics.normalSize * 8
 
             from: 1
             to: 65535
@@ -61,7 +61,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: qsTr("Remote access to internal debugger")
         wrapMode: Text.WordWrap
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 10
         Layout.bottomMargin: 5
     }
@@ -70,7 +70,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("Enable this to access the internal debugger via TCP (telnet/netcat), like for firebird-send.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     RowLayout {
@@ -92,7 +92,7 @@ ColumnLayout {
 
         SpinBox {
             id: rdbPort
-            Layout.maximumWidth: TextMetrics.normalSize * 8
+            Layout.maximumWidth: UiMetrics.normalSize * 8
 
             from: 1
             to: 65535
@@ -107,7 +107,7 @@ ColumnLayout {
 
     FBLabel {
         text: qsTr("Enter into Debugger")
-        font.pixelSize: TextMetrics.title2Size
+        font.pixelSize: UiMetrics.title2Size
         Layout.topMargin: 5
         Layout.bottomMargin: 5
     }
@@ -116,7 +116,7 @@ ColumnLayout {
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
         text: qsTr("Configure which situations cause the emulator to trap into the debugger.")
-        font.pixelSize: TextMetrics.normalSize
+        font.pixelSize: UiMetrics.normalSize
     }
 
     CheckBox {

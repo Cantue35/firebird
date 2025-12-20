@@ -8,4 +8,4 @@ FileSelect 1.0 FileSelect.qml
 FBLink 1.0 FBLink.qml
 Toast 1.0 Toast.qml
 VerticalSwipeBar 1.0 VerticalSwipeBar.qml
-singleton TextMetrics 1.0 TextMetrics.qml
+singleton UiMetrics 1.0 UiMetrics.qml
