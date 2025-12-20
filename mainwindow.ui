@@ -219,12 +219,7 @@
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QPlainTextEdit" name="debugConsole">
-          <property name="font">
-           <font>
-            <family>Monospace</family>
-           </font>
-          </property>
-          <property name="undoRedoEnabled">
+<property name="undoRedoEnabled">
            <bool>false</bool>
           </property>
           <property name="lineWrapMode">
@@ -243,12 +238,7 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="font">
-           <font>
-            <family>Monospace</family>
-           </font>
-          </property>
-         </widget>
+</widget>
         </item>
        </layout>
       </widget>

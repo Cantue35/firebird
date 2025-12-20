@@ -108,9 +108,9 @@ ApplicationWindow {
     }
 
     Connections {
-        target: Qt.application
+        target: Application
         function onStateChanged() {
-            switch (Qt.application.state)
+            switch (Application.state)
             {
                 case Qt.ApplicationSuspended: // Might be reaped on mobile
                     // fallthrough

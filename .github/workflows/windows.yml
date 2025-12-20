@@ -10,50 +10,41 @@ name: Build for Windows
 
 jobs:
   build:
-    name: "Build: ${{ matrix.arch }}"
+    name: "Build: win64"
     runs-on: windows-2022
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - win32
-          - win64
-
     steps:
-    - name: Checkout Git Repo
-      uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
+      - name: Checkout Git Repo
+        uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@f03f05556819ceb3781ee2f455ec44c339d683c0 # v4
-      with:
-        version: '5.15.2'
-        host: 'windows'
-        target: 'desktop'
-        arch: '${{ matrix.arch }}_mingw81'
-        tools: 'tools_mingw,qt.tools.${{ matrix.arch }}_mingw810'
-        cache: true
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
 
-    - name: Fixup PATH
-      run: |
-        echo "$env:IQTA_TOOLS/mingw810_32/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "$env:IQTA_TOOLS/mingw810_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: "windows"
+          target: "desktop"
+          arch: "win64_msvc2022_64"
+          cache: true
 
-    - name: Build firebird-emu
-      run: |
-        mkdir build
-        cd build
-        qmake ..
-        mingw32-make -j4
-        mkdir firebird-emu
-        mv release/firebird-emu.exe firebird-emu/
-        windeployqt --qmldir=../qml --no-qmltooling firebird-emu/firebird-emu.exe
+      - name: Build firebird-emu
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          Set-Location build
+          qmake .. -config release
+          nmake
+          New-Item -ItemType Directory -Force firebird-emu | Out-Null
+          Move-Item -Force release\firebird-emu.exe firebird-emu\
+          windeployqt --qmldir=..\qml --no-qmltooling firebird-emu\firebird-emu.exe
 
-    - name: Upload zip
-      uses: actions/upload-artifact@v4
-      with:
-          name: firebird-emu-${{ matrix.arch }}
+      - name: Upload zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebird-emu-win64
           # Use a wildcard to force a subfolder
           path: "build/*-emu/"
           if-no-files-found: error

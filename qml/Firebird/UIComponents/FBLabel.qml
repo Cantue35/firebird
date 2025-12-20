@@ -1,6 +1,6 @@
-
 import QtQuick
 import QtQuick.Controls
+
 Label {
-    font.family: Qt.platform.os === "windows" ? "Segoe UI" : "system"
+    // Inherit the platform and style default font.
 }

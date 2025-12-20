@@ -1,5 +1,6 @@
-lessThan(QT_MAJOR_VERSION, 5): error("You need at least Qt 5.9 to build Firebird!")
-equals(QT_MAJOR_VERSION, 5):lessThan(QT_MINOR_VERSION, 9): error("You need at least Qt 5.9 to build Firebird!")
+lessThan(QT_MAJOR_VERSION, 6): error("You need at least Qt 6.8.3 to build Firebird!")
+equals(QT_MAJOR_VERSION, 6):lessThan(QT_MINOR_VERSION, 8): error("You need at least Qt 6.8.3 to build Firebird!")
+equals(QT_MAJOR_VERSION, 6):equals(QT_MINOR_VERSION, 8):lessThan(QT_PATCH_VERSION, 3): error("You need at least Qt 6.8.3 to build Firebird!")
 
 # Version
 DEFINES += FB_VERSION=1.6
@@ -15,10 +16,9 @@ isEmpty(SUPPORT_LINUX) | equals(SUPPORT_LINUX, auto) {
 # Localization
 TRANSLATIONS += i18n/de_DE.ts i18n/fr_FR.ts i18n/pl_PL.ts
 
-QT += core gui widgets quickwidgets
-android: QT += androidextras
-CONFIG += c++11
+QT += core gui widgets qml quick quickwidgets quickcontrols2 quickdialogs2
 
+CONFIG += c++17
 TEMPLATE = app
 TARGET = firebird-emu
 

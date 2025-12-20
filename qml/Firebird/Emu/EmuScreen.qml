@@ -1,5 +1,10 @@
-
 import QtQuick
+
 Rectangle {
-    color: "white"
+    SystemPalette {
+        id: sysPal
+        colorGroup: SystemPalette.Active
+    }
+
+    color: sysPal.base
 }

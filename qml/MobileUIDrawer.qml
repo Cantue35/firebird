@@ -11,8 +11,11 @@ import Firebird.Emu 1.0
 import Firebird.UIComponents 1.0
 
 Rectangle {
-    color: "white"
-
+    SystemPalette {
+        id: sysPal
+        colorGroup: SystemPalette.Active
+    }
+    color: sysPal.window
     implicitWidth: layout.implicitWidth
 
     function closeDrawer() {

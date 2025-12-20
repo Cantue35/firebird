@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -31,16 +31,16 @@ jobs:
         id: setup-ndk
         with:
           # Newer doesn't work with Qt 5.15: https://bugreports.qt.io/browse/QTBUG-104580
-          ndk-version: r21
+          ndk-version: r26b
           add-to-path: false
 
       - name: Install Qt
         uses: jurplel/install-qt-action@f03f05556819ceb3781ee2f455ec44c339d683c0 # v4
         with:
-          version: '5.15.2'
-          host: 'linux'
-          target: 'android'
-          arch: 'android'
+          version: "6.8.3"
+          host: "linux"
+          target: "android"
+          arch: "android_armv7"
           cache: true
 
       - name: Build firebird
@@ -50,7 +50,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          qmake .. ANDROID_ABIS="arm64-v8a armeabi-v7a"
+          qmake .. ANDROID_ABIS="armeabi-v7a"
           make -j4 apk_install_target
 
       # "platforms;android-33" currently points to an "android-33-ext4" platform, but the "-ext4"
@@ -74,6 +74,6 @@ jobs:
       - name: Upload zip
         uses: actions/upload-artifact@v4
         with:
-            name: firebird-emu-android
-            path: build/firebird-emu.apk
-            if-no-files-found: error
+          name: firebird-emu-android
+          path: build/firebird-emu.apk
+          if-no-files-found: error

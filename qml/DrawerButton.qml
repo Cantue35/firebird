@@ -16,6 +16,11 @@ Rectangle {
     property bool toggleState: false
     property int spacing: 10
 
+    SystemPalette {
+        id: sysPal
+        colorGroup: SystemPalette.Active
+    }
+
     opacity: disabled ? 0.5 : 1.0
 
     implicitHeight: label.contentHeight * 2
@@ -48,7 +53,7 @@ Rectangle {
         }
 
         height: 1
-        color: "black"
+        color: Qt.rgba(sysPal.windowText.r, sysPal.windowText.g, sysPal.windowText.b, 0.15)
     }
 
     Rectangle {
@@ -60,10 +65,11 @@ Rectangle {
         }
 
         height: 1
-        color: "black"
+        color: Qt.rgba(sysPal.windowText.r, sysPal.windowText.g, sysPal.windowText.b, 0.15)
     }
-
-    color: (mouseArea.pressed !== toggleState) && !disabled ? "#CCC" : "#00000000"
+    color: (!disabled && (mouseArea.pressed !== toggleState))
+        ? Qt.rgba(sysPal.highlight.r, sysPal.highlight.g, sysPal.highlight.b, 0.18)
+        : "transparent"
     Behavior on color { ColorAnimation { duration: 200; } }
 
     Image {
@@ -81,8 +87,7 @@ Rectangle {
     FBLabel {
         id: label
 
-        color: "black"
-
+        color: sysPal.windowText
         x: image.x + image.width + spacing
 
         anchors {

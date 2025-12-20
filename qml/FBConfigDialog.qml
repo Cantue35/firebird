@@ -47,7 +47,7 @@ Window {
             Layout.fillWidth: true
             text: qsTr("Changes are saved automatically")
             font.italic: true
-            color: "grey"
+            color: Qt.rgba(palette.windowText.r, palette.windowText.g, palette.windowText.b, 0.6)
         }
 
         Button {

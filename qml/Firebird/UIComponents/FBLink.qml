@@ -1,6 +1,6 @@
-
 import QtQuick
 import QtQuick.Controls
+
 FBLabel {
     signal clicked
 
@@ -12,7 +12,7 @@ FBLabel {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: parent.clicked()
     }
-    
-    color: "white"
+
+    color: palette.link
     font.bold: true
 }
