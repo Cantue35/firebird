@@ -11,7 +11,7 @@ ToolButton {
 
     Rectangle {
         anchors.fill: parent
-        color: "#CCC"
+        color: Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.22)
         visible: parent.pressed
     }
 

@@ -218,8 +218,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QPlainTextEdit" name="debugConsole">
-<property name="undoRedoEnabled">
+         <widget class="QPlainTextEdit" name="debugConsole"><property name="undoRedoEnabled">
            <bool>false</bool>
           </property>
           <property name="lineWrapMode">
@@ -237,8 +236,7 @@
          <widget class="ConsoleLineEdit" name="lineEdit">
           <property name="enabled">
            <bool>false</bool>
-          </property>
-</widget>
+          </property></widget>
         </item>
        </layout>
       </widget>

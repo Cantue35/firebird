@@ -8,6 +8,7 @@ import QtQuick.Controls
 import Firebird.UIComponents 1.0
 
 Item {
+    SystemPalette { id: pal; colorGroup: SystemPalette.Active }
     Layout.fillHeight: true
     Layout.fillWidth: true
 
@@ -72,7 +73,7 @@ Item {
 
         text: qsTr("Changes are saved automatically")
         font.italic: true
-        color: Qt.rgba(palette.windowText.r, palette.windowText.g, palette.windowText.b, 0.6)
+        color: Qt.rgba(pal.windowText.r, pal.windowText.g, pal.windowText.b, 0.6)
     }
 
     VerticalSwipeBar {

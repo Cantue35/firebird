@@ -1,17 +1,18 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        // Keep this aligned with the Qt 6.8 Android toolchain (JDK 17, recent SDK/Build Tools).
+        classpath 'com.android.tools.build:gradle:8.2.2'
     }
 }
 
 repositories {
     google()
-    jcenter()
+    mavenCentral()
 }
 
 apply plugin: 'com.android.application'
@@ -34,16 +35,40 @@ android {
      * Changing them manually might break the compilation!
      *******************************************************/
 
+    
+    // Qt 5/6 compatibility: androiddeployqt/QtCreator define one of these properties in gradle.properties.
+    def qtAndroidDirProp = null
+    if (project.hasProperty("qt6AndroidDir")) {
+        qtAndroidDirProp = qt6AndroidDir
+    } else if (project.hasProperty("qt5AndroidDir")) {
+        qtAndroidDirProp = qt5AndroidDir
+    } else if (project.hasProperty("qtAndroidDir")) {
+        qtAndroidDirProp = qtAndroidDir
+    } else {
+        throw new GradleException("Qt Android dir property not found (expected qt6AndroidDir, qt5AndroidDir, or qtAndroidDir)")
+    }
+    // Required by newer Android Gradle Plugin versions.
+    namespace "org.firebird.emu"
+
     compileSdkVersion androidCompileSdkVersion.toInteger()
 
     buildToolsVersion androidBuildToolsVersion
 
+    // Prefer values injected by androiddeployqt/QtCreator, but fall back to sane Qt 6.8 defaults.
+    def minSdk = project.hasProperty("androidMinSdkVersion") ? androidMinSdkVersion.toInteger() : 28
+    def targetSdk = project.hasProperty("androidTargetSdkVersion") ? androidTargetSdkVersion.toInteger() : androidCompileSdkVersion.toInteger()
+
+    defaultConfig {
+        minSdkVersion minSdk
+        targetSdkVersion targetSdk
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = [qt5AndroidDir + '/src', 'src', 'java']
-            aidl.srcDirs = [qt5AndroidDir + '/src', 'src', 'aidl']
-            res.srcDirs = [qt5AndroidDir + '/res', 'res']
+            java.srcDirs = [qtAndroidDirProp + '/src', 'src', 'java']
+            aidl.srcDirs = [qtAndroidDirProp + '/src', 'src', 'aidl']
+            res.srcDirs = [qtAndroidDirProp + '/res', 'res']
             resources.srcDirs = ['resources']
             renderscript.srcDirs = ['src']
             assets.srcDirs = ['assets']
@@ -58,5 +83,15 @@ android {
     // Do not compress Qt binary resources file
     aaptOptions {
         noCompress 'rcc'
+    }
+
+    // Android Gradle Plugin (AGP) 8.1+ removed the gradle.properties flag:
+    //   android.bundle.enableUncompressedNativeLibs
+    // Older Qt Android templates used that flag to force legacy (compressed) JNI packaging.
+    // The supported replacement is the packagingOptions.jniLibs DSL.
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
     }
 }

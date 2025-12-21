@@ -4,12 +4,13 @@ import QtQuick
 import Firebird.UIComponents 1.0
 
 Rectangle {
+    SystemPalette { id: pal; colorGroup: SystemPalette.Active }
     property int maxWidth: parent.width * 0.9
     height: message.contentHeight + 8
     width: message.contentWidth + 10
 
-    color: "#dd222222"
-    border.color: "#ccc"
+    color: Qt.rgba(pal.dark.r, pal.dark.g, pal.dark.b, 0.85)
+    border.color: pal.mid
     border.width: 0
 
     opacity: 0
@@ -26,7 +27,7 @@ Rectangle {
     FBLabel {
         id: message
         text: "Text"
-        color: "#eee"
+        color: pal.light
         width: parent.maxWidth
 
         anchors.centerIn: parent

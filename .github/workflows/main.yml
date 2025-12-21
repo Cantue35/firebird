@@ -3,31 +3,32 @@ name: CI
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  workflow_dispatch:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-22.04, ubuntu-24.04]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: "recursive"
-          fetch-depth: 0 # submodule checkout does not work with depth=1 (the default)
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Install build dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential
+          sudo apt install -y build-essential libgl1-mesa-dev
 
-      - name: Install Qt
+      - name: Install Qt 6.8.3
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
@@ -36,11 +37,11 @@ jobs:
 
       - name: Build firebird-headless
         working-directory: headless
-        run: make -j8
+        run: make -j"$(nproc)"
 
-      - name: Build firebird
+      - name: Build firebird-emu
         run: |
-          mkdir build
+          mkdir -p build
           cd build
-          qmake ..
-          make -j4
+          qmake .. CONFIG+=release
+          make -j"$(nproc)"

@@ -1,15 +1,31 @@
-#include <QJniObject>
-#include <QJniEnvironment>
-#include <QNativeInterface>
 #include <QDebug>
+#include <QJniEnvironment>
+#include <QJniObject>
 #include <QScopeGuard>
 #include <QUrl>
 
 #include "os.h"
 
+// Obtain an Android Context without relying on Qt's internal Java helper classes.
+// Using the standard Android API (ActivityThread.currentApplication) avoids
+// compatibility issues across Qt for Android packaging variants.
+static QJniObject android_context()
+{
+    // android.app.ActivityThread.currentApplication() -> android.app.Application
+    QJniObject app = QJniObject::callStaticObjectMethod(
+        "android/app/ActivityThread",
+        "currentApplication",
+        "()Landroid/app/Application;");
+
+    if (!app.isValid())
+        qWarning() << "Failed to obtain Android application context";
+
+    return app;
+}
+
 static bool is_content_url(const char *path)
 {
-    const char pattern[] = "content:";
+    constexpr const char pattern[] = "content:";
     return strncmp(pattern, path, sizeof(pattern) - 1) == 0;
 }
 
@@ -17,60 +33,76 @@ static bool is_content_url(const char *path)
 // Based on code by Florin9doi: https://github.com/nspire-emus/firebird/pull/94/files
 FILE *fopen_utf8(const char *path, const char *mode)
 {
-    if(!is_content_url(path))
+    if (!is_content_url(path))
         return fopen(path, mode);
 
-    QString android_mode; // Why did they have to NIH...
-    if(strcmp(mode, "rb") == 0)
+    // Android uses a "mode" string that differs from libc:
+    // https://developer.android.com/reference/android/content/ContentResolver#openFileDescriptor(android.net.Uri,%20java.lang.String)
+    QString android_mode;
+    if (strcmp(mode, "rb") == 0)
         android_mode = QStringLiteral("r");
-    else if(strcmp(mode, "r+b") == 0)
+    else if (strcmp(mode, "r+b") == 0)
         android_mode = QStringLiteral("rw");
-    else if(strcmp(mode, "wb") == 0)
+    else if (strcmp(mode, "wb") == 0)
         android_mode = QStringLiteral("rwt");
     else
         return nullptr;
 
-    QJniObject jpath = QJniObject::fromString(QString::fromUtf8(path));
-    QJniObject jmode = QJniObject::fromString(android_mode);
-    QJniObject uri = QJniObject::callStaticObjectMethod(
-                "android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;",
-                jpath.object<jstring>());
+    const QJniObject jpath = QJniObject::fromString(QString::fromUtf8(path));
+    const QJniObject jmode = QJniObject::fromString(android_mode);
 
-    QJniObject contentResolver = QJniObject(QNativeInterface::QAndroidApplication::context())
-            .callObjectMethod("getContentResolver",
-                              "()Landroid/content/ContentResolver;");
+    const QJniObject uri = QJniObject::callStaticObjectMethod(
+        "android/net/Uri",
+        "parse",
+        "(Ljava/lang/String;)Landroid/net/Uri;",
+        jpath.object<jstring>());
 
-    // Call contentResolver.takePersistableUriPermission as we save the URI
-    int permflags = 1; // Intent.FLAG_GRANT_READ_URI_PERMISSION
-    if(android_mode.contains(QLatin1Char('w')))
-        permflags |= 2; // Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-    contentResolver.callMethod<void>("takePersistableUriPermission",
-                                     "(Landroid/net/Uri;I)V", uri.object<jobject>(), permflags);
+    const QJniObject context = android_context();
+    if (!context.isValid())
+        return nullptr;
+
+    const QJniObject contentResolver = context.callObjectMethod(
+        "getContentResolver",
+        "()Landroid/content/ContentResolver;");
+    if (!contentResolver.isValid())
+        return nullptr;
+
+    // Call contentResolver.takePersistableUriPermission as we save the URI.
+    // Intent.FLAG_GRANT_READ_URI_PERMISSION = 1
+    // Intent.FLAG_GRANT_WRITE_URI_PERMISSION = 2
+    int permflags = 1;
+    if (android_mode.contains(QLatin1Char('w')))
+        permflags |= 2;
+
+    contentResolver.callMethod<void>(
+        "takePersistableUriPermission",
+        "(Landroid/net/Uri;I)V",
+        uri.object<jobject>(),
+        permflags);
 
     QJniEnvironment env;
+    // QJniObject clears exceptions for its own calls, but direct JNIEnv usage needs handling.
+    env.checkAndClearExceptions();
 
-    if (env.checkAndClearExceptions()) {
-        // JNI exception occurred
-    }
+    const QJniObject parcelFileDescriptor = contentResolver.callObjectMethod(
+        "openFileDescriptor",
+        "(Landroid/net/Uri;Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;",
+        uri.object<jobject>(),
+        jmode.object<jstring>());
 
-    QJniObject parcelFileDescriptor = contentResolver
-            .callObjectMethod("openFileDescriptor",
-                              "(Landroid/net/Uri;Ljava/lang/String;)Landroid/os/ParcelFileDescriptor;",
-                              uri.object<jobject>(), jmode.object<jobject>());
-
-    if (env.checkAndClearExceptions())
+    if (env.checkAndClearExceptions() || !parcelFileDescriptor.isValid())
         return nullptr;
 
-    // The file descriptor needs to be duplicated as
-    QJniObject parcelFileDescriptorDup = parcelFileDescriptor
-            .callObjectMethod("dup",
-                              "()Landroid/os/ParcelFileDescriptor;");
+    // Duplicate the file descriptor: detachFd() transfers ownership to us.
+    const QJniObject parcelFileDescriptorDup = parcelFileDescriptor.callObjectMethod(
+        "dup",
+        "()Landroid/os/ParcelFileDescriptor;");
 
-    if (env.checkAndClearExceptions())
+    if (env.checkAndClearExceptions() || !parcelFileDescriptorDup.isValid())
         return nullptr;
 
-    int fd = parcelFileDescriptorDup.callMethod<jint>("detachFd", "()I");
-    if(fd < 0)
+    const int fd = parcelFileDescriptorDup.callMethod<jint>("detachFd", "()I");
+    if (fd < 0)
         return nullptr;
 
     return fdopen(fd, mode);
@@ -78,36 +110,68 @@ FILE *fopen_utf8(const char *path, const char *mode)
 
 static QString android_basename_using_content_resolver(const QString &path)
 {
-    QJniObject jpath = QJniObject::fromString(path);
-    QJniObject uri = QJniObject::callStaticObjectMethod(
-                "android/net/Uri", "parse", "(Ljava/lang/String;)Landroid/net/Uri;",
-                jpath.object<jstring>());
+    const QJniObject jpath = QJniObject::fromString(path);
+    const QJniObject uri = QJniObject::callStaticObjectMethod(
+        "android/net/Uri",
+        "parse",
+        "(Ljava/lang/String;)Landroid/net/Uri;",
+        jpath.object<jstring>());
 
-    QJniObject contentResolver = QJniObject(QNativeInterface::QAndroidApplication::context())
-            .callObjectMethod("getContentResolver",
-                              "()Landroid/content/ContentResolver;");
+    const QJniObject context = android_context();
+    if (!context.isValid())
+        return {};
+
+    const QJniObject contentResolver = context.callObjectMethod(
+        "getContentResolver",
+        "()Landroid/content/ContentResolver;");
+    if (!contentResolver.isValid())
+        return {};
 
     QJniEnvironment env;
-    QJniObject col = QJniObject::getStaticObjectField("android/provider/OpenableColumns", "DISPLAY_NAME", "Ljava/lang/String;");
-    QJniObject proj = env->NewObjectArray(1, env.findClass("java/lang/String"), col.object<jstring>());
 
-    QJniObject cursor = contentResolver.callObjectMethod("query", "(Landroid/net/Uri;[Ljava/lang/String;Landroid/os/Bundle;Landroid/os/CancellationSignal;)Landroid/database/Cursor;", uri.object<jobject>(), proj.object<jobject>(), nullptr, nullptr);
+    jclass openableColumnsClass = env.findClass("android/provider/OpenableColumns");
+    if (!openableColumnsClass)
+        return {};
+
+    // OpenableColumns.DISPLAY_NAME is a String constant.
+    const jfieldID displayNameField = env.findStaticField<jstring>(openableColumnsClass, "DISPLAY_NAME");
+    if (!displayNameField)
+        return {};
+
+    jstring displayName = static_cast<jstring>(env->GetStaticObjectField(openableColumnsClass, displayNameField));
     if (env.checkAndClearExceptions())
         return {};
 
-    if(!cursor.isValid())
+    const QJniObject col(displayName);
+
+    jclass stringClass = env.findClass("java/lang/String");
+    if (!stringClass)
         return {};
 
-    auto closeCursor = qScopeGuard([&] { cursor.callMethod<void>("close", "()V"); });
-
-    bool hasContent = cursor.callMethod<jboolean>("moveToFirst", "()Z");
-    if (env.checkAndClearExceptions())
+    jobjectArray projectionArray = env->NewObjectArray(1, stringClass, col.object<jstring>());
+    if (env.checkAndClearExceptions() || !projectionArray)
         return {};
 
-    if(!hasContent)
+    const QJniObject projection(projectionArray);
+
+    const QJniObject cursor = contentResolver.callObjectMethod(
+        "query",
+        "(Landroid/net/Uri;[Ljava/lang/String;Landroid/os/Bundle;Landroid/os/CancellationSignal;)Landroid/database/Cursor;",
+        uri.object<jobject>(),
+        projection.object<jobject>(),
+        nullptr,
+        nullptr);
+
+    if (env.checkAndClearExceptions() || !cursor.isValid())
         return {};
 
-    QJniObject name = cursor.callObjectMethod("getString", "(I)Ljava/lang/String;", 0);
+    const auto closeCursor = qScopeGuard([&] { cursor.callMethod<void>("close", "()V"); });
+
+    const bool hasContent = cursor.callMethod<jboolean>("moveToFirst", "()Z");
+    if (env.checkAndClearExceptions() || !hasContent)
+        return {};
+
+    const QJniObject name = cursor.callObjectMethod("getString", "(I)Ljava/lang/String;", 0);
     if (!name.isValid())
         return {};
 
@@ -116,22 +180,21 @@ static QString android_basename_using_content_resolver(const QString &path)
 
 char *android_basename(const char *path)
 {
-    if (is_content_url(path))
-    {
+    if (is_content_url(path)) {
         // Example: content://com.android.externalstorage.documents/document/primary%3AFirebird%2Fflash_tpad
-        QString pathStr = QString::fromUtf8(path);
+        const QString pathStr = QString::fromUtf8(path);
         QString ret = android_basename_using_content_resolver(pathStr);
+
         // If that failed (e.g. because the permission expired), try to get something recognizable.
-        if (ret.isEmpty())
-        {
+        if (ret.isEmpty()) {
             qWarning() << "Failed to get basename of" << pathStr << "using ContentResolver";
-            auto parts = pathStr.splitRef(QStringLiteral("%2F"), QString::SkipEmptyParts, Qt::CaseInsensitive);
-            if(parts.length() > 1)
-                ret = QUrl::fromPercentEncoding(parts.last().toString().toUtf8());
+            const QStringList parts = pathStr.split(QStringLiteral("%2F"), Qt::SkipEmptyParts, Qt::CaseInsensitive);
+            if (parts.size() > 1)
+                ret = QUrl::fromPercentEncoding(parts.constLast().toUtf8());
         }
 
         if (!ret.isEmpty())
-            return strdup(ret.toUtf8().data());
+            return strdup(ret.toUtf8().constData());
     }
 
     return nullptr;

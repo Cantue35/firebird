@@ -1,6 +1,7 @@
 name: Build for Windows
 
-#on:
+on:
+  workflow_dispatch:
 #  push:
 #    branches: [ master, ci/windows ]
 #  pull_request:
@@ -10,41 +11,45 @@ name: Build for Windows
 
 jobs:
   build:
-    name: "Build: win64"
+    name: "Build: win64 (MinGW-w64)"
     runs-on: windows-2022
+
     steps:
-      - name: Checkout Git Repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          submodules: "recursive"
+          submodules: recursive
+          fetch-depth: 0
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install Qt
+      - name: Install Qt 6.8.3 (MinGW-w64) + toolchain
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
-          host: "windows"
-          target: "desktop"
-          arch: "win64_msvc2022_64"
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          # Install a MinGW-w64 toolchain that matches Qt 6.8's official MinGW build
+          tools: "tools_mingw1310,qt.tools.win64_mingw1310"
           cache: true
 
-      - name: Build firebird-emu
+      - name: Build firebird-emu (qmake)
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force build | Out-Null
           Set-Location build
-          qmake .. -config release
-          nmake
-          New-Item -ItemType Directory -Force firebird-emu | Out-Null
-          Move-Item -Force release\firebird-emu.exe firebird-emu\
-          windeployqt --qmldir=..\qml --no-qmltooling firebird-emu\firebird-emu.exe
 
-      - name: Upload zip
+          qmake .. CONFIG+=release
+          mingw32-make -j2
+
+          New-Item -ItemType Directory -Force firebird-emu | Out-Null
+          Copy-Item -Force "release\firebird-emu.exe" "firebird-emu\"
+
+          # Deploy Qt + QML deps into build/firebird-emu
+          windeployqt --qmldir=..\qml --compiler-runtime firebird-emu\firebird-emu.exe
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: firebird-emu-win64
-          # Use a wildcard to force a subfolder
-          path: "build/*-emu/"
+          path: build/firebird-emu/
           if-no-files-found: error

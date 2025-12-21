@@ -113,8 +113,10 @@ int main(int argc, char **argv)
         QGuiApplication app(argc, argv);
 
         QTranslator appTranslator;
-        appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
-        app.installTranslator(&appTranslator);
+        // QTranslator::load returns bool (nodiscard). Only install if it actually loaded.
+        const bool loaded = appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
+        if (loaded)
+            app.installTranslator(&appTranslator);
     #else
         QApplication app(argc, argv);
 

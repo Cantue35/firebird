@@ -1,10 +1,6 @@
 import QtQuick
 
 Rectangle {
-    SystemPalette {
-        id: sysPal
-        colorGroup: SystemPalette.Active
-    }
-
-    color: sysPal.base
+    SystemPalette { id: pal; colorGroup: SystemPalette.Active }
+    color: pal.window
 }

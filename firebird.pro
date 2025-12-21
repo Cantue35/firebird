@@ -11,14 +11,19 @@ isEmpty(TRANSLATION_ENABLED): TRANSLATION_ENABLED = auto
 isEmpty(SUPPORT_LINUX) | equals(SUPPORT_LINUX, auto) {
 	SUPPORT_LINUX = true
 	ios|android: SUPPORT_LINUX = false
+	win32: SUPPORT_LINUX = false
 }
 
 # Localization
 TRANSLATIONS += i18n/de_DE.ts i18n/fr_FR.ts i18n/pl_PL.ts
 
-QT += core gui widgets qml quick quickwidgets quickcontrols2 quickdialogs2
-
+QT += core gui widgets network qml quick quickwidgets quickcontrols2 quickdialogs2
 CONFIG += c++17
+
+# Ensure consistent behavior across compilers.
+# Prefer explicit defines rather than injecting "-D" via compiler flags.
+DEFINES += QT_NO_CAST_FROM_ASCII
+
 TEMPLATE = app
 TARGET = firebird-emu
 
@@ -40,13 +45,17 @@ unix: !android {
     INSTALLS += target desktop icon sendtool
 }
 
-QMAKE_CFLAGS += -g -std=gnu11 -Wall -Wextra
-QMAKE_CXXFLAGS += -g -Wall -Wextra -D QT_NO_CAST_FROM_ASCII
+gcc|clang {
+    QMAKE_CFLAGS += -g -std=gnu11 -Wall -Wextra
+    QMAKE_CXXFLAGS += -g -Wall -Wextra
+}
 LIBS += -lz
 
 # Override bad default options to enable better optimizations
-QMAKE_CFLAGS_RELEASE = -O3 -DNDEBUG
-QMAKE_CXXFLAGS_RELEASE = -O3 -DNDEBUG
+gcc|clang {
+    QMAKE_CFLAGS_RELEASE = -O3 -DNDEBUG
+    QMAKE_CXXFLAGS_RELEASE = -O3 -DNDEBUG
+}
 
 # Don't enable LTO with clang on Linux, incompatible with Qt (QTBUG-43556).
 # On FreeBSD, clang with LTO produces copy relocs, which are incompatible
@@ -61,7 +70,7 @@ QMAKE_CXXFLAGS_RELEASE = -O3 -DNDEBUG
 }
 
 # Work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52991
-win32: {
+win32:!msvc {
     QMAKE_CFLAGS += -mno-ms-bitfields
     QMAKE_CXXFLAGS += -mno-ms-bitfields
 }

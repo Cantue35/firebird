@@ -1,7 +1,17 @@
 <?xml version="1.0"?>
-<manifest package="org.firebird.emu" xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="1.6" android:versionCode="10" android:installLocation="auto">
-    <application android:hardwareAccelerated="true" android:name="org.qtproject.qt5.android.bindings.QtApplication" android:label="Firebird Emu" android:icon="@drawable/icon" android:extractNativeLibs="true">
-        <activity android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation" android:name="org.qtproject.qt5.android.bindings.QtActivity" android:label="-- %%INSERT_APP_NAME%% --" android:screenOrientation="unspecified" android:launchMode="singleTop">
+<!--
+  AGP 8+ no longer supports setting the namespace/applicationId via the manifest "package" attribute.
+  The namespace is set in android/build.gradle instead.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="1.6" android:versionCode="10" android:installLocation="auto">
+    <!-- Qt 6 uses the 'org.qtproject.qt.android.bindings' Java bindings package. -->
+    <!--
+      Do not set android:extractNativeLibs here; with recent AGP versions it should be controlled via Gradle
+      packagingOptions instead.
+    -->
+    <application android:hardwareAccelerated="true" android:name="org.qtproject.qt.android.bindings.QtApplication" android:label="Firebird Emu" android:icon="@drawable/icon">
+        <!-- Android 12+ requires android:exported for components with intent-filters -->
+        <activity android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation" android:name="org.qtproject.qt.android.bindings.QtActivity" android:label="-- %%INSERT_APP_NAME%% --" android:screenOrientation="unspecified" android:launchMode="singleTop" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -22,9 +32,6 @@
             <meta-data android:name="android.app.load_local_jars" android:value="-- %%INSERT_LOCAL_JARS%% --"/>
             <meta-data android:name="android.app.static_init_classes" android:value="-- %%INSERT_INIT_CLASSES%% --"/>
             <!--  Messages maps -->
-            <meta-data android:value="@string/ministro_not_found_msg" android:name="android.app.ministro_not_found_msg"/>
-            <meta-data android:value="@string/ministro_needed_msg" android:name="android.app.ministro_needed_msg"/>
-            <meta-data android:value="@string/fatal_error_msg" android:name="android.app.fatal_error_msg"/>
             <!--  Messages maps -->
 
             <!-- Splash screen -->
@@ -40,7 +47,8 @@
             <meta-data android:name="android.max_aspect" android:value="2.5"/>
         </activity>
     </application>
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28"/>
+    <!-- Qt 6.8 requires minSdkVersion >= 28. Keep targetSdkVersion aligned with CI (android-35). -->
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <supports-screens android:largeScreens="true" android:normalScreens="true" android:anyDensity="true" android:smallScreens="true"/>
 
     <!-- The following comment will be replaced upon deployment with default permissions based on the dependencies of the application.
